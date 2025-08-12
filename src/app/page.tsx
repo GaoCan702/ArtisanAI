@@ -27,19 +27,39 @@ export default function Home() {
     }
   }, []);
 
-  // 初始化时加载任务
+  // 初始化与订阅任务流（支持流式更新）
   useEffect(() => {
+    const service = getTaskService();
+    const unsub = service.subscribe((next) => {
+      setTasks(next);
+    });
     void refreshTasks();
+    return () => {
+      unsub();
+    };
   }, [refreshTasks]);
+
+  // 活跃任务轮询刷新，保证第一列进度能实时更新
+  useEffect(() => {
+    const hasActive = tasks.some(
+      (t) => t.status === "pending" || t.status === "processing",
+    );
+    if (!hasActive) return;
+    const timer = setInterval(() => {
+      void refreshTasks();
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [tasks, refreshTasks]);
 
   const handleCreateTask = async (
     companyInfo: string,
     productInfo: string,
     articleCount: number,
+    targetWordCount: number,
   ) => {
     try {
       const taskService = getTaskService();
-      await taskService.createTask(companyInfo, productInfo, articleCount);
+      await taskService.createTask(companyInfo, productInfo, articleCount, targetWordCount);
       setCreateSheetOpen(false); // Close sheet on success
       await refreshTasks(); // Refresh the task list
     } catch (error) {
@@ -118,7 +138,9 @@ export default function Home() {
                           type="button"
                           onClick={() => { setSelectedArticleIndex(idx); }}
                           className={`w-full text-left p-4 border-b hover:bg-gray-50 ${
-                            selectedArticleIndex === idx ? "bg-blue-50" : ""
+                            selectedArticleIndex === idx ? "bg-blue-50" :
+                            // 高亮当前生成中的文章（当任务 processing 且该 idx 为当前进度对应项）
+                            (selectedTask.status === "processing" && idx === Math.floor((selectedTask.progress/100)*selectedTask.articleCount)) ? "bg-yellow-50" : ""
                           }`}
                         >
                           <p className="font-medium text-sm truncate">{a.title}</p>

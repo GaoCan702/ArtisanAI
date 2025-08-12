@@ -107,7 +107,11 @@ export function TaskList({
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-gray-500">
                       <span>{task.status}</span>
-                      <span>{task.progress}%</span>
+                      <span>
+                        {Math.floor((task.progress / 100) * task.articleCount)} / {task.articleCount}
+                        
+                        <span className="ml-1">({task.progress}%)</span>
+                      </span>
                     </div>
                   </div>
                 </button>

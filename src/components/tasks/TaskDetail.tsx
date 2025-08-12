@@ -1,6 +1,8 @@
 "use client";
 
 import type { GenerationTask } from "@/services/taskService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface TaskDetailProps {
   task: GenerationTask | undefined;
@@ -62,40 +64,11 @@ export function TaskDetail({ task, onCollapse }: TaskDetailProps) {
         </div>
       </div>
       <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <h3 className="font-semibold mb-2">任务状态</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-500">状态</p>
-              <p>{task.status}</p>
-            </div>
-            <div>
-              <p className="text-gray-500">进度</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${task.progress}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <p className="text-gray-500">创建于</p>
-              <p>{new Date(task.createdAt).toLocaleString()}</p>
-            </div>
-            {task.completedAt && (
-              <div>
-                <p className="text-gray-500">完成于</p>
-                <p>{new Date(task.completedAt).toLocaleString()}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
         <h3 className="font-semibold mb-4">
           生成的文章 ({task.articles?.length ?? 0})
         </h3>
         {task.articles && task.articles.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2">
             {task.articles.map((article, _index) => (
               <div key={article.title} className="bg-white p-4 rounded-lg shadow-sm">
                 <div className="flex items-start gap-2">
@@ -112,8 +85,10 @@ export function TaskDetail({ task, onCollapse }: TaskDetailProps) {
                     复制
                   </button>
                 </div>
-                <div className="prose prose-sm max-w-none text-gray-800 whitespace-pre-wrap">
-                  {article.content}
+                <div className="prose prose-sm max-w-none text-gray-800">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {article.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))}
