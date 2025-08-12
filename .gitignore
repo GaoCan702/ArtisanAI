@@ -13,6 +13,9 @@
 /out/
 /dist/
 
+# generated assets
+/public/brand/dist/
+
 # production
 /build
 
@@ -31,6 +34,14 @@ yarn-error.log*
 
 # local env files
 .env*.local
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+._*
 
 # vercel
 .vercel
