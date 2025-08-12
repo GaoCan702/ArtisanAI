@@ -1,7 +1,9 @@
 import path from 'node:path';
 import fs from 'fs-extra';
 import sharp from 'sharp';
-import png2icons from 'png2icons';
+// png2icons 没有完善的类型定义，使用 require 并标注 any
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const png2icons: any = require('png2icons');
 import pngToIco from 'png-to-ico';
 
 const root = process.cwd();
