@@ -1,0 +1,215 @@
+import { invoke } from "@tauri-apps/api/core";
+import { type GeneratedArticle, getGeminiService } from "./geminiService";
+
+export interface GenerationTask {
+  id: string;
+  companyInfo: string;
+  productInfo: string;
+  articleCount: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  progress: number;
+  createdAt: Date;
+  completedAt?: Date;
+  articles?: GeneratedArticle[];
+}
+
+// Rust后端返回的任务类型
+interface RustTask {
+  id: string;
+  company_info: string;
+  product_info: string;
+  article_count: number;
+  status: string;
+  progress: number;
+  created_at: number;
+  completed_at?: number;
+  articles?: GeneratedArticle[];
+}
+
+export class TaskService {
+  private tasks: Map<string, GenerationTask> = new Map();
+
+  async createTask(
+    companyInfo: string,
+    productInfo: string,
+    articleCount: number,
+  ): Promise<GenerationTask> {
+    try {
+      // 调用Rust后端创建任务
+      const rustTask = await invoke<RustTask>("create_generation_task", {
+        companyInfo,
+        productInfo,
+        articleCount,
+      });
+
+      if (!rustTask || !rustTask.id) {
+        throw new Error("Invalid response from backend");
+      }
+
+      const task: GenerationTask = {
+        id: rustTask.id,
+        companyInfo: rustTask.company_info,
+        productInfo: rustTask.product_info,
+        articleCount: rustTask.article_count,
+        status: "pending" as const,
+        progress: 0,
+        createdAt: new Date(rustTask.created_at * 1000),
+        completedAt: undefined,
+        articles: undefined,
+      };
+
+      this.tasks.set(task.id, task);
+
+      // 异步开始处理任务
+      this.processTask(task.id).catch((err) => {
+        console.error("Task processing failed:", err);
+        // 将任务标记为失败
+        const failedTask = this.tasks.get(task.id);
+        if (failedTask) {
+          failedTask.status = "failed";
+          failedTask.completedAt = new Date();
+        }
+      });
+
+      return task;
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      throw new Error(
+        `创建任务失败: ${error instanceof Error ? error.message : "未知错误"}`,
+      );
+    }
+  }
+
+  async getAllTasks(): Promise<GenerationTask[]> {
+    // 从Rust后端获取任务（未来实现数据库持久化时使用）
+    // const rustTasks = await invoke<any[]>('get_all_tasks');
+
+    // 现在返回内存中的任务
+    return Array.from(this.tasks.values()).sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
+
+  getTask(id: string): GenerationTask | undefined {
+    return this.tasks.get(id);
+  }
+
+  private async processTask(taskId: string): Promise<void> {
+    const task = this.tasks.get(taskId);
+    if (!task) return;
+
+    try {
+      // 更新任务状态为处理中
+      task.status = "processing";
+      task.progress = 0;
+      await this.updateTaskProgress(taskId, "processing", 0);
+
+      // 获取prompt模板
+      const promptTemplate = await invoke<string>("get_prompt_template");
+
+      // 使用Gemini生成文章
+      const geminiService = getGeminiService();
+      const articles = await geminiService.generateArticles(
+        task.companyInfo,
+        task.productInfo,
+        task.articleCount,
+        promptTemplate,
+        (progress) => {
+          task.progress = progress;
+          // 同步更新Rust后端状态
+          this.updateTaskProgress(taskId, "processing", progress).catch(
+            (err) => {
+              console.warn("Failed to update backend progress:", err);
+            },
+          );
+        },
+      );
+
+      // 更新任务为完成状态
+      task.status = "completed";
+      task.progress = 100;
+      task.completedAt = new Date();
+      task.articles = articles;
+
+      await this.updateTaskProgress(taskId, "completed", 100);
+      await this.updateTaskArticles(taskId, articles);
+    } catch (error) {
+      console.error("Task processing failed:", error);
+
+      // 更新任务为失败状态
+      task.status = "failed";
+      task.completedAt = new Date();
+
+      await this.updateTaskProgress(taskId, "failed", task.progress);
+    }
+  }
+
+  private async updateTaskProgress(
+    taskId: string,
+    status: string,
+    progress: number,
+  ): Promise<void> {
+    try {
+      await invoke("update_task_progress", { taskId, status, progress });
+    } catch (error) {
+      console.error("Failed to update task progress:", error);
+    }
+  }
+
+  private async updateTaskArticles(
+    taskId: string,
+    articles: GeneratedArticle[],
+  ): Promise<void> {
+    try {
+      await invoke("update_task_articles", { taskId, articles });
+    } catch (error) {
+      console.error("Failed to update task articles:", error);
+    }
+  }
+
+  async exportTaskResults(
+    taskId: string,
+    format: "markdown" | "txt" | "html" = "markdown",
+  ): Promise<string | null> {
+    const task = this.tasks.get(taskId);
+    if (!task || !task.articles) return null;
+
+    try {
+      // 合并所有文章内容
+      const combinedContent = task.articles
+        .map((article) => `# ${article.title}\n\n${article.content}\n\n---\n\n`)
+        .join("");
+
+      // 调用Rust后端导出功能
+      const result = await invoke<any>("export_content", {
+        content: combinedContent,
+        options: {
+          format,
+          filename: `task_${taskId}_articles.${format}`,
+          metadata: {
+            taskId,
+            companyInfo: task.companyInfo,
+            productInfo: task.productInfo,
+            articleCount: task.articleCount,
+            generatedAt: task.completedAt?.toISOString(),
+          },
+        },
+      });
+
+      return result.success ? result.file_path : null;
+    } catch (error) {
+      console.error("Failed to export task results:", error);
+      return null;
+    }
+  }
+}
+
+// 单例实例
+let taskServiceInstance: TaskService | null = null;
+
+export function getTaskService(): TaskService {
+  if (!taskServiceInstance) {
+    taskServiceInstance = new TaskService();
+  }
+  return taskServiceInstance;
+}

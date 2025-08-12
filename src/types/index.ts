@@ -25,7 +25,7 @@ export interface GenerationTemplate {
   name: string;
   description: string;
   prompt_template: string;
-  output_format: 'article' | 'social_media' | 'email' | 'press_release';
+  output_format: "article" | "social_media" | "email" | "press_release";
   created_at: string;
   updated_at: string;
 }
@@ -36,7 +36,7 @@ export interface GenerationTask {
   product_id?: number;
   template_id: number;
   title: string;
-  status: 'pending' | 'generating' | 'completed' | 'failed';
+  status: "pending" | "generating" | "completed" | "failed";
   input_data: Record<string, any>;
   generated_content?: string;
   created_at: string;
