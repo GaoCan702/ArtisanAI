@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-nextjs-template",
+        "title": "Artisan AI",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,
