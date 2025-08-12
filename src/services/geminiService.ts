@@ -35,6 +35,8 @@ export class GeminiService {
     articleCount: number,
     promptTemplate: string,
     onProgress?: (progress: number) => void,
+    targetWordCount?: number,
+    onPartial?: (index: number, partialMarkdown: string) => void,
   ): Promise<GeneratedArticle[]> {
     const articles: GeneratedArticle[] = [];
 
@@ -49,11 +51,30 @@ export class GeminiService {
           .replace("{company_info}", companyInfo)
           .replace("{product_info}", productInfo);
 
-        // 调用Gemini API
-        const result = await this.model.generateContent(prompt);
-        const response = result.response;
+        const finalPrompt = targetWordCount
+          ? `${prompt}\n\n请严格输出标准化 Markdown 结构（#、##、段落空行、列表）。目标字数约 ${targetWordCount} 字（±20%），不要输出多余元信息。`
+          : `${prompt}\n\n请严格输出标准化 Markdown 结构（#、##、段落空行、列表），不要输出多余元信息。`;
 
-        const content = response.text();
+        // 调用Gemini API（优先流式）
+        let content = '';
+        if (onPartial) {
+          const streamResult = await this.model.generateContentStream(
+            finalPrompt,
+          );
+          for await (const chunk of streamResult.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+              content += chunkText;
+              onPartial(i, content);
+            }
+          }
+          const aggregated = await streamResult.response;
+          content = aggregated.text();
+        } else {
+          const result = await this.model.generateContent(finalPrompt);
+          const response = result.response;
+          content = response.text();
+        }
 
         if (!content?.trim()) {
           throw new Error("生成内容为空");

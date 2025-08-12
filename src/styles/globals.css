@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --font-sans: var(--font-geist-sans);
@@ -76,4 +77,12 @@
 body {
   color: hsl(var(--color-foreground));
   background: hsl(var(--color-background));
+}
+
+/* Typography tuning for markdown */
+.prose {
+  --tw-prose-body: hsl(var(--color-foreground));
+  --tw-prose-headings: hsl(var(--color-foreground));
+  --tw-prose-bold: hsl(var(--color-foreground));
+  --tw-prose-links: hsl(var(--color-primary));
 }

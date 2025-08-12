@@ -20,9 +20,11 @@ export function SettingsDialog({ onClose }: SettingsProps) {
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
     "none" | "success" | "failed"
   >("none");
+  const [saveStatus, setSaveStatus] = useState<"none" | "success">("none");
 
   useEffect(() => {
     // 从环境变量或localStorage加载API Key
@@ -33,12 +35,25 @@ export function SettingsDialog({ onClose }: SettingsProps) {
     setApiKey(savedKey);
   }, []);
 
-  const handleSaveApiKey = () => {
+  const handleSaveApiKey = async () => {
     if (apiKey.trim()) {
-      localStorage.setItem("gemini_api_key", apiKey.trim());
-      // 重置Gemini服务实例以使用新的API Key
-      resetGeminiService();
-      setConnectionStatus("none");
+      setIsSaving(true);
+      try {
+        localStorage.setItem("gemini_api_key", apiKey.trim());
+        // 重置Gemini服务实例以使用新的API Key
+        resetGeminiService();
+        setConnectionStatus("none");
+        setSaveStatus("success");
+
+        // 显示成功提示1秒后关闭弹窗
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } catch (error) {
+        console.error("保存配置失败:", error);
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -80,20 +95,24 @@ export function SettingsDialog({ onClose }: SettingsProps) {
 
           <CardContent className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="gemini-api-key"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Gemini API Key <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
+                  id="gemini-api-key"
                   type={showApiKey ? "text" : "password"}
                   value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  onChange={(e) => { setApiKey(e.target.value); }}
                   placeholder="请输入您的 Gemini API Key"
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
+                  onClick={() => { setShowApiKey(!showApiKey); }}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 >
                   {showApiKey ? (
@@ -137,6 +156,13 @@ export function SettingsDialog({ onClose }: SettingsProps) {
               </div>
             )}
 
+            {saveStatus === "success" && (
+              <div className="p-3 rounded-lg flex items-center gap-2 bg-blue-50 text-blue-800">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">配置保存成功！</span>
+              </div>
+            )}
+
             <div className="bg-gray-50 p-3 rounded-lg">
               <h4 className="font-medium text-gray-900 mb-2">使用说明</h4>
               <ul className="text-xs text-gray-600 space-y-1">
@@ -169,9 +195,16 @@ export function SettingsDialog({ onClose }: SettingsProps) {
               <Button
                 onClick={handleSaveApiKey}
                 className="flex-1"
-                disabled={!apiKey.trim()}
+                disabled={isSaving || !apiKey.trim()}
               >
-                保存配置
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    保存中...
+                  </>
+                ) : (
+                  "保存配置"
+                )}
               </Button>
             </div>
           </CardContent>

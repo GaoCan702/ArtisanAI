@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-label="Artisan AI horizontal logo" fill="none">
+  <title>Artisan AI Horizontal</title>
+  <style>
+    .mark{color:hsl(var(--color-primary,222.2 47.4% 11.2%));}
+    .text{fill:currentColor;color:hsl(var(--color-foreground,222.2 84% 4.9%));font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
+  </style>
+  <g class="mark" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" transform="translate(24,24)">
+    <path d="M40 112L96 8L152 112"/>
+    <path d="M66 86H126"/>
+  </g>
+  <text class="text" x="200" y="104" font-size="68" letter-spacing="2">Artisan AI</text>
+</svg>
+
+
