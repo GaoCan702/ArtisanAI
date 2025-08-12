@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Sidebar } from "@/components/navigation/Sidebar";
 import { SettingsDialog } from "@/components/ui/Settings";
 import { CreateTaskSheet } from "@/components/tasks/CreateTaskSheet";
@@ -14,6 +14,10 @@ export default function Home() {
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
   const [isMiddleCollapsed, setIsMiddleCollapsed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isAutoFollow, setIsAutoFollow] = useState(true);
+
+  const articlesListRef = useRef<HTMLDivElement | null>(null);
+  const articleItemRefs = useRef<Array<HTMLLIElement | null>>([]);
 
   const [isCreateSheetOpen, setCreateSheetOpen] = useState(false);
 
@@ -50,6 +54,18 @@ export default function Home() {
     }, 1500);
     return () => clearInterval(timer);
   }, [tasks, refreshTasks]);
+
+  // 自动跟随当前生成中文章滚动到可见
+  useEffect(() => {
+    if (!isAutoFollow) return;
+    const task = selectedTask;
+    if (!task || task.status !== "processing" || task.articleCount === 0) return;
+    const currentIdx = Math.floor((task.progress / 100) * task.articleCount);
+    const el = articleItemRefs.current[currentIdx];
+    if (el && articlesListRef.current) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedTask?.progress, selectedTask?.status, selectedTask?.articleCount, isAutoFollow]);
 
   const handleCreateTask = async (
     companyInfo: string,
@@ -94,6 +110,7 @@ export default function Home() {
                 onSelectTask={(id) => {
                   setSelectedTaskId(id);
                   setSelectedArticleIndex(0);
+                  setIsAutoFollow(true);
                 }}
                 onNewTask={() => { setCreateSheetOpen(true); }}
                 onCollapse={() => { setIsLeftCollapsed(true); }}
@@ -129,14 +146,20 @@ export default function Home() {
                   «
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto" ref={articlesListRef}>
                 {selectedTask?.articles && selectedTask.articles.length > 0 ? (
                   <ul>
                     {selectedTask.articles.map((a, idx) => (
-                      <li key={`${a.title}-${idx}`}>
+                      <li
+                        key={`${a.title}-${idx}`}
+                        ref={(el) => { articleItemRefs.current[idx] = el; }}
+                      >
                         <button
                           type="button"
-                          onClick={() => { setSelectedArticleIndex(idx); }}
+                          onClick={() => {
+                            setSelectedArticleIndex(idx);
+                            setIsAutoFollow(false);
+                          }}
                           className={`w-full text-left p-4 border-b hover:bg-gray-50 ${
                             selectedArticleIndex === idx ? "bg-blue-50" :
                             // 高亮当前生成中的文章（当任务 processing 且该 idx 为当前进度对应项）
