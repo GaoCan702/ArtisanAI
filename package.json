@@ -10,6 +10,7 @@
     "lint": "biome check && next lint",
     "fix": "biome check --fix && next lint --fix",
     "test": "vitest",
+    "icons": "tsx scripts/build-icons.ts",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -47,9 +48,14 @@
     "eslint": "^9.31.0",
     "eslint-config-next": "^15.4.2",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "fs-extra": "^11.3.1",
     "jsdom": "^26.1.0",
+    "png-to-ico": "^2.1.8",
+    "png2icons": "^2.0.1",
+    "sharp": "^0.34.3",
     "tailwindcss": "^4.1.11",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.20.3",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.37.0",
     "vite-tsconfig-paths": "^5.1.4",
