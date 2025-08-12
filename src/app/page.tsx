@@ -58,14 +58,14 @@ export default function Home() {
   // 自动跟随当前生成中文章滚动到可见
   useEffect(() => {
     if (!isAutoFollow) return;
-    const task = selectedTask;
+    const task = tasks.find((t) => t.id === selectedTaskId);
     if (!task || task.status !== "processing" || task.articleCount === 0) return;
     const currentIdx = Math.floor((task.progress / 100) * task.articleCount);
     const el = articleItemRefs.current[currentIdx];
     if (el && articlesListRef.current) {
       el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-  }, [selectedTask?.progress, selectedTask?.status, selectedTask?.articleCount, isAutoFollow]);
+  }, [tasks, selectedTaskId, isAutoFollow]);
 
   const handleCreateTask = async (
     companyInfo: string,
