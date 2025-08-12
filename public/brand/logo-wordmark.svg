@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-label="Artisan AI wordmark" fill="none">
+  <title>Artisan AI Wordmark</title>
+  <style>
+    .mark{color:hsl(var(--color-primary,222.2 47.4% 11.2%));}
+    .text{fill:currentColor;color:hsl(var(--color-foreground,222.2 84% 4.9%));font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
+  </style>
+  <!-- Left mark -->
+  <g class="mark" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30 100L60 20L90 100"/>
+    <path d="M44 80H76"/>
+  </g>
+  <!-- Word -->
+  <text class="text" x="120" y="84" font-size="56" letter-spacing="1.5">Artisan AI</text>
+</svg>
+
+
