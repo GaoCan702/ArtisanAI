@@ -27,7 +27,7 @@ interface RustTask {
 }
 
 export class TaskService {
-  private tasks: Map<string, GenerationTask> = new Map();
+  private tasks = new Map<string, GenerationTask>();
 
   async createTask(
     companyInfo: string,
@@ -161,8 +161,18 @@ export class TaskService {
     articles: GeneratedArticle[],
   ): Promise<void> {
     try {
-      await invoke("update_task_articles", { taskId, articles });
-    } catch (error) {
+      // 将前端的camelCase转换为Rust后端的snake_case
+      const articlesForBackend = articles.map((article) => ({
+        title: article.title,
+        content: article.content,
+        word_count: article.wordCount,
+      }));
+
+      await invoke("update_task_articles", {
+        taskId,
+        articles: articlesForBackend,
+      });
+    } catch (error: unknown) {
       console.error("Failed to update task articles:", error);
     }
   }
@@ -180,8 +190,16 @@ export class TaskService {
         .map((article) => `# ${article.title}\n\n${article.content}\n\n---\n\n`)
         .join("");
 
+      // 与 Rust 导出的 ExportResult 字段保持一致（filePath/fileSize）
+      interface ExportResult {
+        success: boolean;
+        filePath?: string;
+        error?: string;
+        fileSize?: number;
+      }
+
       // 调用Rust后端导出功能
-      const result = await invoke<any>("export_content", {
+      const result = await invoke<ExportResult>("export_content", {
         content: combinedContent,
         options: {
           format,
@@ -196,7 +214,7 @@ export class TaskService {
         },
       });
 
-      return result.success ? result.file_path : null;
+      return result.success ? result.filePath ?? null : null;
     } catch (error) {
       console.error("Failed to export task results:", error);
       return null;

@@ -36,13 +36,13 @@ export function TaskManager({ tasks, onRefresh }: TaskManagerProps) {
       }
     }, 3000);
 
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); };
   }, [tasks, onRefresh]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await onRefresh();
-    setTimeout(() => setIsRefreshing(false), 500);
+    setTimeout(() => { setIsRefreshing(false); }, 500);
   };
 
   const toggleTaskSelection = (taskId: string) => {
@@ -202,7 +202,7 @@ export function TaskManager({ tasks, onRefresh }: TaskManagerProps) {
                       <input
                         type="checkbox"
                         checked={selectedTasks.has(task.id)}
-                        onChange={() => toggleTaskSelection(task.id)}
+                        onChange={() => { toggleTaskSelection(task.id); }}
                         className="rounded"
                       />
                     )}

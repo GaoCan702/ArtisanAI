@@ -37,7 +37,7 @@ export interface GenerationTask {
   template_id: number;
   title: string;
   status: "pending" | "generating" | "completed" | "failed";
-  input_data: Record<string, any>;
+  input_data: Record<string, unknown>;
   generated_content?: string;
   created_at: string;
   updated_at: string;

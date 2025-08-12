@@ -97,7 +97,7 @@ export function ContentGenerator({
                 <Textarea
                   id="company"
                   value={companyInfo}
-                  onChange={(e) => setCompanyInfo(e.target.value)}
+                  onChange={(e) => { setCompanyInfo(e.target.value); }}
                   placeholder="请输入您的公司简介，包括公司定位、核心业务、发展历程等信息..."
                   className="min-h-[120px]"
                   required
@@ -117,7 +117,7 @@ export function ContentGenerator({
                 <Textarea
                   id="product"
                   value={productInfo}
-                  onChange={(e) => setProductInfo(e.target.value)}
+                  onChange={(e) => { setProductInfo(e.target.value); }}
                   placeholder="请输入您的产品说明，包括产品特点、优势、应用场景、目标用户等..."
                   className="min-h-[120px]"
                   required
@@ -128,7 +128,10 @@ export function ContentGenerator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="custom-count"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   文章数量
                 </label>
                 <div className="space-y-3">
@@ -139,7 +142,7 @@ export function ContentGenerator({
                         type="button"
                         variant={articleCount === count ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setArticleCount(count)}
+                        onClick={() => { setArticleCount(count); }}
                       >
                         {count} 篇
                       </Button>
@@ -149,11 +152,12 @@ export function ContentGenerator({
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">自定义：</span>
                     <input
+                      id="custom-count"
                       type="number"
                       min="10"
                       max="100"
                       value={articleCount}
-                      onChange={(e) => setArticleCount(Number(e.target.value))}
+                      onChange={(e) => { setArticleCount(Number(e.target.value)); }}
                       className="w-20 px-3 py-1 border border-gray-300 rounded-md text-sm"
                     />
                     <span className="text-sm text-gray-600">篇</span>
