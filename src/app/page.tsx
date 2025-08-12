@@ -173,6 +173,7 @@ export default function Home() {
           <section className="flex-1 min-w-0">
             <TaskDetail
               task={selectedTask}
+              selectedIndex={selectedArticleIndex}
               onCollapse={() => {
                 // 展开前两列，便于用户切换
                 setIsLeftCollapsed(false);

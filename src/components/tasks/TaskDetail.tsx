@@ -6,10 +6,11 @@ import remarkGfm from "remark-gfm";
 
 interface TaskDetailProps {
   task: GenerationTask | undefined;
+  selectedIndex?: number;
   onCollapse?: () => void;
 }
 
-export function TaskDetail({ task, onCollapse }: TaskDetailProps) {
+export function TaskDetail({ task, selectedIndex = 0, onCollapse }: TaskDetailProps) {
   if (!task) {
     return (
       <section className="flex-1 flex flex-col">
@@ -64,34 +65,35 @@ export function TaskDetail({ task, onCollapse }: TaskDetailProps) {
         </div>
       </div>
       <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
-        <h3 className="font-semibold mb-4">
-          生成的文章 ({task.articles?.length ?? 0})
-        </h3>
         {task.articles && task.articles.length > 0 ? (
-          <div className="space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2">
-            {task.articles.map((article, _index) => (
-              <div key={article.title} className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="flex items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-lg mb-2 truncate">{article.title}</h4>
-                    <p className="text-sm text-gray-500 mb-4">字数: {article.wordCount}</p>
+          <div className="max-h-[calc(100vh-12rem)] overflow-y-auto pr-2">
+            {(() => {
+              const article = task.articles![Math.min(selectedIndex, task.articles!.length - 1)];
+              if (!article) return null;
+              return (
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-lg mb-2 truncate">{article.title}</h4>
+                      <p className="text-sm text-gray-500 mb-4">字数: {article.wordCount}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { void navigator.clipboard.writeText(`# ${article.title}\n\n${article.content}`); }}
+                      className="shrink-0 px-2.5 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      title="复制全文"
+                    >
+                      复制
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => { void navigator.clipboard.writeText(`# ${article.title}\n\n${article.content}`); }}
-                    className="shrink-0 px-2.5 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700"
-                    title="复制全文"
-                  >
-                    复制
-                  </button>
+                  <div className="prose prose-sm max-w-none text-gray-800">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {article.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
-                <div className="prose prose-sm max-w-none text-gray-800">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {article.content}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            ))}
+              );
+            })()}
           </div>
         ) : (
           <div className="text-center text-gray-500 py-8">
