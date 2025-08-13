@@ -56,7 +56,9 @@ export function TaskDetail({
     const combined = task.articles
       .map((a) => {
         const plainTitle = removeMd(a.title);
-        const plainContent = removeMd(a.content);
+        // 移除内容中的第一行标题（如果存在）
+        const contentWithoutTitle = a.content.replace(/^#\s+.+$/m, '').trim();
+        const plainContent = removeMd(contentWithoutTitle);
         return `${plainTitle}\n\n${plainContent}`;
       })
       .join("\n\n---\n\n");
@@ -91,7 +93,9 @@ export function TaskDetail({
   }) => {
     try {
       const plainTitle = removeMd(article.title);
-      const plainContent = removeMd(article.content);
+      // 移除内容中的第一行标题（如果存在）
+      const contentWithoutTitle = article.content.replace(/^#\s+.+$/m, '').trim();
+      const plainContent = removeMd(contentWithoutTitle);
       await navigator.clipboard.writeText(`${plainTitle}\n\n${plainContent}`);
       setCopiedSingle(true);
       setTimeout(() => setCopiedSingle(false), 2000);
