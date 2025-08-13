@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Sidebar } from "@/components/navigation/Sidebar";
-import { SettingsDialog } from "@/components/ui/Settings";
 import { CreateTaskSheet } from "@/components/tasks/CreateTaskSheet";
 import { TaskDetail } from "@/components/tasks/TaskDetail";
 import { TaskList } from "@/components/tasks/TaskList";
+import { SettingsDialog } from "@/components/ui/Settings";
 import { type GenerationTask, getTaskService } from "@/services/taskService";
 
 export default function Home() {
@@ -30,6 +30,23 @@ export default function Home() {
       console.error("获取任务失败:", error);
     }
   }, []);
+
+  const handleDeleteTask = useCallback(async (taskId: string) => {
+    try {
+      const taskService = getTaskService();
+      await taskService.deleteTask(taskId);
+      
+      // 如果删除的是当前选中的任务，清除选择
+      if (selectedTaskId === taskId) {
+        setSelectedTaskId(null);
+        setSelectedArticleIndex(0);
+      }
+      
+      await refreshTasks();
+    } catch (error) {
+      console.error("删除任务失败:", error);
+    }
+  }, [selectedTaskId, refreshTasks]);
 
   // 初始化与订阅任务流（支持流式更新）
   useEffect(() => {
@@ -59,7 +76,8 @@ export default function Home() {
   useEffect(() => {
     if (!isAutoFollow) return;
     const task = tasks.find((t) => t.id === selectedTaskId);
-    if (!task || task.status !== "processing" || task.articleCount === 0) return;
+    if (!task || task.status !== "processing" || task.articleCount === 0)
+      return;
     const currentIdx = Math.floor((task.progress / 100) * task.articleCount);
     const el = articleItemRefs.current[currentIdx];
     if (el && articlesListRef.current) {
@@ -75,7 +93,12 @@ export default function Home() {
   ) => {
     try {
       const taskService = getTaskService();
-      await taskService.createTask(companyInfo, productInfo, articleCount, targetWordCount);
+      await taskService.createTask(
+        companyInfo,
+        productInfo,
+        articleCount,
+        targetWordCount,
+      );
       setCreateSheetOpen(false); // Close sheet on success
       await refreshTasks(); // Refresh the task list
     } catch (error) {
@@ -112,9 +135,16 @@ export default function Home() {
                   setSelectedArticleIndex(0);
                   setIsAutoFollow(true);
                 }}
-                onNewTask={() => { setCreateSheetOpen(true); }}
-                onCollapse={() => { setIsLeftCollapsed(true); }}
-                onShowSettings={() => { setShowSettings(true); }}
+                onNewTask={() => {
+                  setCreateSheetOpen(true);
+                }}
+                onCollapse={() => {
+                  setIsLeftCollapsed(true);
+                }}
+                onShowSettings={() => {
+                  setShowSettings(true);
+                }}
+                onDeleteTask={handleDeleteTask}
               />
             </div>
           ) : (
@@ -125,7 +155,9 @@ export default function Home() {
                 className="w-full h-24 text-xs text-gray-400 hover:text-gray-600"
                 title="展开任务栏"
                 aria-label="展开任务栏"
-                onClick={() => { setIsLeftCollapsed(false); }}
+                onClick={() => {
+                  setIsLeftCollapsed(false);
+                }}
               >
                 »
               </button>
@@ -139,7 +171,9 @@ export default function Home() {
                 <h3 className="text-base font-semibold">文章列表</h3>
                 <button
                   type="button"
-                  onClick={() => { setIsMiddleCollapsed(true); }}
+                  onClick={() => {
+                    setIsMiddleCollapsed(true);
+                  }}
                   className="px-2 py-1 text-sm rounded-md text-gray-600 hover:bg-gray-100"
                   title="折叠"
                 >
@@ -152,7 +186,9 @@ export default function Home() {
                     {selectedTask.articles.map((a, idx) => (
                       <li
                         key={`${a.title}-${idx}`}
-                        ref={(el) => { articleItemRefs.current[idx] = el; }}
+                        ref={(el) => {
+                          articleItemRefs.current[idx] = el;
+                        }}
                       >
                         <button
                           type="button"
@@ -161,13 +197,27 @@ export default function Home() {
                             setIsAutoFollow(false);
                           }}
                           className={`w-full text-left p-4 border-b hover:bg-gray-50 ${
-                            selectedArticleIndex === idx ? "bg-blue-50" :
-                            // 高亮当前生成中的文章（当任务 processing 且该 idx 为当前进度对应项）
-                            (selectedTask.status === "processing" && idx === Math.floor((selectedTask.progress/100)*selectedTask.articleCount)) ? "bg-yellow-50" : ""
+                            selectedArticleIndex === idx
+                              ? "bg-blue-50"
+                              : // 高亮当前生成中的文章（当任务 processing 且该 idx 为当前进度对应项）
+                                (
+                                    selectedTask.status === "processing" &&
+                                      idx ===
+                                        Math.floor(
+                                          (selectedTask.progress / 100) *
+                                            selectedTask.articleCount,
+                                        )
+                                  )
+                                ? "bg-yellow-50"
+                                : ""
                           }`}
                         >
-                          <p className="font-medium text-sm truncate">{a.title}</p>
-                          <p className="text-xs text-gray-500 mt-1">字数：{a.wordCount}</p>
+                          <p className="font-medium text-sm truncate">
+                            {a.title}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            字数：{a.wordCount}
+                          </p>
                         </button>
                       </li>
                     ))}
@@ -185,7 +235,9 @@ export default function Home() {
                 className="w-full h-24 text-xs text-gray-400 hover:text-gray-600"
                 title="展开文章列表"
                 aria-label="展开文章列表"
-                onClick={() => { setIsMiddleCollapsed(false); }}
+                onClick={() => {
+                  setIsMiddleCollapsed(false);
+                }}
               >
                 »
               </button>
@@ -209,7 +261,11 @@ export default function Home() {
 
       {/* 设置弹窗 */}
       {showSettings && (
-        <SettingsDialog onClose={() => { setShowSettings(false); }} />
+        <SettingsDialog
+          onClose={() => {
+            setShowSettings(false);
+          }}
+        />
       )}
 
       <CreateTaskSheet

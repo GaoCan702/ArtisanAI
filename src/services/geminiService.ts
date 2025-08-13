@@ -2,6 +2,7 @@ import {
   type GenerativeModel,
   GoogleGenerativeAI,
 } from "@google/generative-ai";
+import { applyRulesToPrompt } from "./rulesService";
 
 export interface GeneratedArticle {
   title: string;
@@ -26,7 +27,7 @@ export class GeminiService {
     }
 
     this.genAI = new GoogleGenerativeAI(key);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   }
 
   async generateArticles(
@@ -51,16 +52,18 @@ export class GeminiService {
           .replace("{company_info}", companyInfo)
           .replace("{product_info}", productInfo);
 
-        const finalPrompt = targetWordCount
+        const basePrompt = targetWordCount
           ? `${prompt}\n\n请严格输出标准化 Markdown 结构（#、##、段落空行、列表）。目标字数约 ${targetWordCount} 字（±20%），不要输出多余元信息。`
           : `${prompt}\n\n请严格输出标准化 Markdown 结构（#、##、段落空行、列表），不要输出多余元信息。`;
 
+        // 应用内容规则
+        const finalPrompt = applyRulesToPrompt(basePrompt);
+
         // 调用Gemini API（优先流式）
-        let content = '';
+        let content = "";
         if (onPartial) {
-          const streamResult = await this.model.generateContentStream(
-            finalPrompt,
-          );
+          const streamResult =
+            await this.model.generateContentStream(finalPrompt);
           for await (const chunk of streamResult.stream) {
             const chunkText = chunk.text();
             if (chunkText) {

@@ -2,8 +2,8 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
+import { Settings as SettingsIcon, Trash2 } from "lucide-react";
 import type { GenerationTask } from "@/services/taskService";
-import { Settings as SettingsIcon } from "lucide-react";
 
 interface TaskListProps {
   tasks: GenerationTask[];
@@ -12,6 +12,7 @@ interface TaskListProps {
   onNewTask: () => void;
   onCollapse?: () => void;
   onShowSettings?: () => void;
+  onDeleteTask: (id: string) => void;
 }
 
 export function TaskList({
@@ -21,6 +22,7 @@ export function TaskList({
   onNewTask,
   onCollapse,
   onShowSettings,
+  onDeleteTask,
 }: TaskListProps) {
   return (
     <section className="flex flex-col bg-white border-r h-full">
@@ -70,16 +72,18 @@ export function TaskList({
         ) : (
           <ul>
             {tasks.map((task) => (
-              <li key={task.id}>
+              <li key={task.id} className="relative group">
                 <button
                   type="button"
-                  onClick={() => { onSelectTask(task.id); }}
+                  onClick={() => {
+                    onSelectTask(task.id);
+                  }}
                   className={`w-full text-left p-4 border-b hover:bg-gray-50 focus:outline-none ${
                     selectedTaskId === task.id ? "bg-blue-50" : ""
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <p className="font-semibold text-sm truncate">
+                    <p className="font-semibold text-sm truncate pr-6">
                       {task.companyInfo}
                     </p>
                     <span className="text-xs text-gray-500">
@@ -108,12 +112,25 @@ export function TaskList({
                     <div className="flex items-center justify-between text-[10px] text-gray-500">
                       <span>{task.status}</span>
                       <span>
-                        {Math.floor((task.progress / 100) * task.articleCount)} / {task.articleCount}
-                        
+                        {Math.floor((task.progress / 100) * task.articleCount)}{" "}
+                        / {task.articleCount}
                         <span className="ml-1">({task.progress}%)</span>
                       </span>
                     </div>
                   </div>
+                </button>
+                
+                {/* 删除按钮 */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteTask(task.id);
+                  }}
+                  className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="删除任务"
+                >
+                  <Trash2 className="w-3 h-3" />
                 </button>
               </li>
             ))}

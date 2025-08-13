@@ -118,6 +118,24 @@ export class TaskService {
     return this.tasks.get(id);
   }
 
+  async deleteTask(id: string): Promise<void> {
+    try {
+      // 从内存中删除任务
+      this.tasks.delete(id);
+      
+      // 通知订阅者更新
+      this.notify();
+      
+      // 从Rust后端删除任务（如果需要持久化）
+      // await invoke('delete_task', { taskId: id });
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      throw new Error(
+        `删除任务失败: ${error instanceof Error ? error.message : "未知错误"}`,
+      );
+    }
+  }
+
   private async processTask(taskId: string): Promise<void> {
     const task = this.tasks.get(taskId);
     if (!task) return;
@@ -257,7 +275,7 @@ export class TaskService {
         },
       });
 
-      return result.success ? result.filePath ?? null : null;
+      return result.success ? (result.filePath ?? null) : null;
     } catch (error) {
       console.error("Failed to export task results:", error);
       return null;

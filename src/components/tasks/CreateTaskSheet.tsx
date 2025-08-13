@@ -51,7 +51,12 @@ export function CreateTaskSheet({
         2000,
         Math.max(200, Number.parseInt(targetWordCountInput, 10) || 800),
       );
-      await onSubmit(companyInfo, productInfo, parsedArticleCount, parsedTarget);
+      await onSubmit(
+        companyInfo,
+        productInfo,
+        parsedArticleCount,
+        parsedTarget,
+      );
       // Success will trigger the sheet to close via onOpenChange
     } catch (error) {
       console.error("Failed to submit task:", error);
@@ -76,7 +81,9 @@ export function CreateTaskSheet({
         >
           <SheetHeader className="p-0 pb-4 border-b">
             <SheetTitle>创建新任务</SheetTitle>
-            <SheetDescription>填写公司和产品信息，AI将为您生成营销文章。</SheetDescription>
+            <SheetDescription>
+              填写公司和产品信息，AI将为您生成营销文章。
+            </SheetDescription>
           </SheetHeader>
           <div className="grid gap-5 py-4">
             <div className="grid grid-cols-4 items-start gap-4">
@@ -86,7 +93,9 @@ export function CreateTaskSheet({
               <Textarea
                 id="company-info"
                 value={companyInfo}
-                onChange={(e) => { setCompanyInfo(e.target.value); }}
+                onChange={(e) => {
+                  setCompanyInfo(e.target.value);
+                }}
                 className="col-span-3"
                 placeholder="例如：公司名称、业务、目标客户等"
                 required
@@ -99,7 +108,9 @@ export function CreateTaskSheet({
               <Textarea
                 id="product-info"
                 value={productInfo}
-                onChange={(e) => { setProductInfo(e.target.value); }}
+                onChange={(e) => {
+                  setProductInfo(e.target.value);
+                }}
                 className="col-span-3"
                 placeholder="例如：产品特性、优势、应用场景等"
                 required
@@ -113,7 +124,9 @@ export function CreateTaskSheet({
                 id="article-count"
                 type="number"
                 value={articleCountInput}
-                onChange={(e) => { setArticleCountInput(e.target.value); }}
+                onChange={(e) => {
+                  setArticleCountInput(e.target.value);
+                }}
                 className="col-span-3"
                 min="1"
                 max="20"
@@ -128,7 +141,9 @@ export function CreateTaskSheet({
                 id="target-words"
                 type="number"
                 value={targetWordCountInput}
-                onChange={(e) => { setTargetWordCountInput(e.target.value); }}
+                onChange={(e) => {
+                  setTargetWordCountInput(e.target.value);
+                }}
                 className="col-span-3"
                 min="200"
                 max="2000"
